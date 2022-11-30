@@ -1,6 +1,4 @@
-# Lithium Client
-
-This project was created with [Create React App](https://github.com/facebook/create-react-app).
+# Lithium Server
 
 ## About Lithium
 In case of spying your information we are better than Facebook (because only one person is reading your chats)
