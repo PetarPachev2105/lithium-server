@@ -10,7 +10,7 @@ module.exports = class User extends Model {
     properties: {
       id: { type: 'string' }, // The user id
 
-      username: { type: 'string' }, // The name of the workspace
+      username: { type: 'string' }, // User unique username
 
       email: { type: 'string' }, // The email of the user
 

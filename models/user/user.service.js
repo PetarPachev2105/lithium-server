@@ -24,6 +24,17 @@ exports.loginUser = async function (userWithTheSameCredentials, password) {
     return userWithTheSameCredentials;
 }
 
+exports.getUserByUsername = async function (username) {
+    const user = await User.query()
+        .select('id', 'email', 'username')
+        .where('username', username)
+        .limit(1)
+        .first();
+
+    return user;
+}
+
+
 exports.getUserIdByUsername = async function (username) {
     const user = await User.query()
         .select('id')
@@ -32,4 +43,14 @@ exports.getUserIdByUsername = async function (username) {
         .first();
 
     return user;
+}
+
+exports.getUserUsernameById = async function (userId) {
+    const user = await User.query()
+        .select('username')
+        .where('id', userId)
+        .limit(1)
+        .first();
+
+    return user ? user.username : null;
 }

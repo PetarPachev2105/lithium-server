@@ -1,20 +1,19 @@
 const { Model } = require('objection');
 const User = require('../user/user.model');
-const ChatRoom = require('../chatRoom/chatRoom.model');
 
-module.exports = class ChatMember extends Model {
-    static tableName = 'chatMember';
+module.exports = class LithiumHood extends Model {
+    static tableName = 'lithiumHood';
 
     static jsonSchema = {
         type: 'object',
-        required: ['id', 'chatRoom_id', 'user_id'],
+        required: ['id', 'user_id', 'created_at'],
 
         properties: {
             id: { type: 'string' },
 
-            chatRoom_id: { type: 'string' }, // The Chat Room Id
-
             user_id: { type: 'string' }, // The id of the user
+
+            created_at: { type: 'timestamp' }, // The date+time when the space was created
         },
     };
 
@@ -25,16 +24,8 @@ module.exports = class ChatMember extends Model {
                 relation: Model.HasOneRelation,
                 modelClass: User,
                 join: {
-                    from: 'chatMember.user_id',
+                    from: 'lithiumHood.user_id',
                     to: 'user.id',
-                },
-            },
-            chatRoom: {
-                relation: Model.HasOneRelation,
-                modelClass: ChatRoom,
-                join: {
-                    from: 'chatMember.chatRoom_id',
-                    to: 'chatRoom.id',
                 },
             },
         };

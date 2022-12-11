@@ -22,7 +22,7 @@
     "http": "^0.0.1-security",
     "http-status": "1.5.3",
     "jsonwebtoken": "8.5.1",
-    "knex": "0.95.14",
+    "knex": "0.21.17",
     "nanoid": "^3.0.0",
     "objection": "2.2.18",
     "pg": "8.8.0",

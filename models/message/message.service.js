@@ -1,5 +1,6 @@
 const Message = require('./message.model');
 const IDGenerator = require('../../lib/idGenerator');
+const { convertDateTime } = require('../../lib/convertDateTime');
 
 exports.getLastMessageNumber = async function getLastMessageNumber (chatRoomId) {
     const lastMessage = await Message.query()
@@ -146,11 +147,11 @@ function generate1000Messages(chatRoom, user) {
 }
 
 function generateDefaultMessage(chatRoom) {
-    const contents = ['Let send a message!', 'Men always write first'];
-    const sent_at_readable = ['now', 'from future', 'last time you opened me']
-
+    const contents = ['Let\'s send a message!', 'Men always write first'];
     const randomContent = Math.floor(Math.random() * contents.length);
-    const randomTime = Math.floor(Math.random() * sent_at_readable.length);
+
+    // const sent_at_readable = ['now', 'from future', 'last time you opened me']
+    // const randomTime = Math.floor(Math.random() * sent_at_readable.length);
 
     return {
         content: contents[randomContent],
@@ -160,20 +161,4 @@ function generateDefaultMessage(chatRoom) {
             username: 'Lithium Bot',
         },
     };
-}
-
-function convertDateTime (date) {
-    let hours = date.getHours();
-    if (hours.toString().length < 2) hours = `0${hours}`;
-
-    let minutes = date.getMinutes();
-    if (minutes.toString().length < 2) minutes = `0${minutes}`;
-
-    const day = date.getDate();
-
-    const month = date.getMonth();
-
-    const year = date.getFullYear();
-
-    return `${hours}:${minutes} ${day}/${month}/${year}`;
 }

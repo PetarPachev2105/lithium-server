@@ -12,6 +12,8 @@ module.exports = class ChatRoom extends Model {
 
             name: { type: 'string' }, // The name of the chat room
 
+            is_group: { type: 'boolean' }, // Is group chat
+
             created_at: { type: 'timestamp' }, // The date+time when the chat room was created
         },
     };

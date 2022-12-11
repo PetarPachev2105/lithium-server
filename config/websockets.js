@@ -6,6 +6,8 @@ const IDGenerator = require('../lib/idGenerator');
 /* LUTs for Websocket clients */
 const lithiumRoomLUT = {}; // LUT based on Chat Room ID = {lithiumRoomId: [ws clients]
 
+const lithiumHoodLUT = {}; // LUT based on Chat Room ID = {lithiumRoomId: [ws clients]
+
 /* NoOp function for ping/pong */
 function noop() {
 }
@@ -21,9 +23,13 @@ function heartbeat() {
  * @param ws
  */
 function removeClientFromLUTS(ws) {
-    /* Check if we have to remove this client from the edition LUT */
-    if (ws.lithiumRoomId) {
+    /* Check if we have to remove this client from the LUT */
+    if (ws.lithiumHoodId) {
         // console.log(`removing ${ws.id} from lithiumRoomLUT`);
+        if (lithiumHoodLUT[ws.lithiumHoodId] && lithiumHoodLUT[ws.lithiumHoodId][ws.id]) {
+            delete lithiumHoodLUT[ws.lithiumHoodId][ws.id];
+        }
+    } else if (ws.lithiumRoomId) {
         if (lithiumRoomLUT[ws.lithiumRoomId] && lithiumRoomLUT[ws.lithiumRoomId][ws.id]) {
             delete lithiumRoomLUT[ws.lithiumRoomId][ws.id];
         }
@@ -67,7 +73,7 @@ wss.on('close', () => {
  * Handle incoming connections
  */
 wss.on('connection', (ws, req) => {
-    // logger.info(`Websockets - connection. URL = ${req.url}`);
+    // console.log(`Websockets - connection. URL = ${req.url}`);
     ws.isAlive = true; // Set alive flag to true
     ws.id = IDGenerator.generateUUID();
     ws.on('pong', heartbeat); // Handle pongs
@@ -75,22 +81,32 @@ wss.on('connection', (ws, req) => {
     const parameters = url.parse(req.url, true);
     if (parameters.query) {
         /* If we have query params (i.e., we got a connect from lithium-client */
+        const lithiumHoodId = parameters.query.lithiumHoodId;
         const lithiumRoomId = parameters.query.lithiumRoomId;
 
         /* If we got a discrete clientId value from the client, set that as the client id on our side */
         if (parameters.query.clientId) {
             ws.id = parameters.query.clientId;
-            // logger.info(`WS client: ${ws.id}`);
+            // console.log(`WS client: ${ws.id}`);
         }
 
-        if (lithiumRoomId) {
+        if (lithiumHoodId) {
+            ws.lithiumHoodId = lithiumHoodId;
+
+            lithiumHoodLUT[lithiumHoodId] = lithiumHoodLUT[lithiumHoodId] || {};
+            lithiumHoodLUT[lithiumHoodId][ws.id] = (ws);
+
+            // console.log(`lithiumRoomLUT: ${JSON.stringify(lithiumRoomLUT)}`)
+
+            console.log(`lithiumHoodLUT for ${lithiumHoodId} now has ${Object.keys(lithiumHoodLUT[lithiumHoodId]).length} clients connected`);
+        } else if (lithiumRoomId) {
             /* Set the lithiumRoomId of the ws client object */
             ws.lithiumRoomId = lithiumRoomId;
 
             lithiumRoomLUT[lithiumRoomId] = lithiumRoomLUT[lithiumRoomId] || {};
             lithiumRoomLUT[lithiumRoomId][ws.id] = (ws);
 
-            // logger.warn(`lithiumRoomLUT: ${JSON.stringify(lithiumRoomLUT)}`)
+            // console.log(`lithiumRoomLUT: ${JSON.stringify(lithiumRoomLUT)}`)
 
             console.log(`lithiumRoomLUT for ${lithiumRoomId} now has ${Object.keys(lithiumRoomLUT[lithiumRoomId]).length} clients connected`);
         }
@@ -108,20 +124,19 @@ wss.on('connection', (ws, req) => {
      * Handle message receipt
      */
     ws.on('message', async (data) => {
-        // logger.info(`Websockets - message received = ${JSON.stringify(data)}`);
+        // console.log(`Websockets - message received = ${JSON.stringify(data)}`);
 
         const message = JSON.parse(data);
 
-        // logger.info('WS message', message);
+        // console.log('WS message', message);
 
-        if (message.source === 'api-client') {
-
+        if (message.source === 'lithiumRoom') {
             const lithiumRoomId = message.lithiumRoomId;
-            // logger.verbose(`ws-worker => ${message.type} lithiumRoomId = ${lithiumRoomId}`);
+            // console.log(`ws-worker => ${message.type} lithiumRoomId = ${lithiumRoomId}`);
 
-            // Find clients that are listening to this edition
+            // Find clients that are listening to this lithium room
             const clients = lithiumRoomLUT[lithiumRoomId] || [];
-            // logger.verbose(`ws-worker => ${message.type} ${lithiumRoomId} has ${clients.length} to update`);
+            // console.log(`ws-worker => ${message.type} ${lithiumRoomId} has ${clients.length} to update`);
 
             await asyncJS.eachLimit(clients, 5, (client, eachLimitCallback) => {
                 const clientMessage = {
@@ -129,6 +144,27 @@ wss.on('connection', (ws, req) => {
                     sourceId: message.sourceId,
                     type: message.type,
                     lithiumRoomId: message.lithiumRoomId,
+                    payload: message.payload,
+                };
+
+                client.send(JSON.stringify(clientMessage));
+
+                return eachLimitCallback(null);
+            });
+        } else if (message.source === 'lithiumHood') {
+            const lithiumHoodId = message.lithiumHoodId;
+            // console.log(`ws-worker => ${message.type} lithiumHoodId = ${lithiumHoodId}`);
+
+            // Find clients that are listening to this lithium room
+            const clients = lithiumHoodLUT[lithiumHoodId] || [];
+            // console.log(`ws-worker => ${message.type} ${lithiumHoodId} has ${clients.length} to update`);
+
+            await asyncJS.eachLimit(clients, 5, (client, eachLimitCallback) => {
+                const clientMessage = {
+                    source: message.source,
+                    sourceId: message.sourceId,
+                    type: message.type,
+                    lithiumHoodId: message.lithiumHoodId,
                     payload: message.payload,
                 };
 
