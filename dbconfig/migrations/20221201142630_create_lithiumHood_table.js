@@ -1,11 +1,9 @@
 exports.up = function (knex) {
     return Promise.all([
-        knex.schema.createTable('chatRoom', (table) => {
+        knex.schema.createTable('lithiumHood', (table) => {
             table.string('id').primary();
 
-            table.string('name');
-
-            table.boolean('is_group');
+            table.string('user_id');
 
             table.timestamp('created_at');
 
@@ -15,6 +13,6 @@ exports.up = function (knex) {
 
 exports.down = function (knex) {
     return Promise.all([
-        knex.schema.dropTable('chatRoom'),
+        knex.schema.dropTable('lithiumHood'),
     ]);
 };

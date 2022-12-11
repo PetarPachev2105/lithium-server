@@ -23,16 +23,17 @@ exports.getChatRooms = async (req, res) => {
     res.json(chatRooms);
 }
 
-exports.createChatRoom = async (req, res) => {
-    console.log(`createChatRoom was CALLED with ${JSON.stringify(req.body)}`);
+exports.createGroupLithiumRoom = async (req, res) => {
+    console.log(`createGroupLithiumRoom was CALLED with ${JSON.stringify(req.body)}`);
     if (!req.body.name) throw new LithiumError(LithiumErrorTypes.MISSING_INPUTS, 'No name was specified');
 
-    const chatRoom = await ChatRoomService.createChatRoom(req.body.name);
+    const chatRoom = await ChatRoomService.createGroupLithiumRoom(req.body.name);
     if (chatRoom) {
         await ChatMemberService.addChatMember(req.user.id, chatRoom.id)
+        chatRoom.lastMessage = await MessageService.getLastMessageForChatRoom(chatRoom);
     }
 
-    await MessageService.send1000Messages(chatRoom, req.user);
+    // await MessageService.send1000Messages(chatRoom, req.user);
 
     res.status(httpStatus.OK);
     res.json(chatRoom);
@@ -116,7 +117,17 @@ exports.sendMessage = async (req, res) => {
     message.user = req.user;
 
     const ws = await WebSocketHelper.getOpenWebsocket();
-    await WebSocketHelper.sendWebsocketMessage(ws, 'api-client', req.headers.clientid, 'message-received', chatRoomId, message)
+    await WebSocketHelper.sendWebsocketMessage(ws, 'lithiumRoom', req.headers.clientid, 'message-received', chatRoomId, message);
+
+    /* Send message to the lithium Hood websockets */
+    const lithiumHoodsIds = await ChatMemberService.getMembersLithiumHoods(chatRoomId);
+    lithiumHoodsIds.forEach(async (lithiumHoodsId) => {
+        const payload = {
+            lithiumRoom: chatRoom,
+            message: message,
+        }
+        await WebSocketHelper.sendWebsocketMessage(ws, 'lithiumHood', req.headers.clientid, 'received-message', lithiumHoodsId, payload);
+    })
     ws.close();
 
     res.status(httpStatus.OK);
@@ -148,8 +159,8 @@ exports.addMember = async (req, res) => {
     const message = await MessageService.sendMessage(chatRoomId, req.user.id, customMessage);
 
     const ws = await WebSocketHelper.getOpenWebsocket();
-    await WebSocketHelper.sendWebsocketMessage(ws, 'api-client', req.headers.clientid, 'automated-message', chatRoomId, message);
-    await WebSocketHelper.sendWebsocketMessage(ws, 'api-client', req.headers.clientid, 'added-member', chatRoomId, addMember)
+    await WebSocketHelper.sendWebsocketMessage(ws, 'lithiumRoom', req.headers.clientid, 'automated-message', chatRoomId, message);
+    await WebSocketHelper.sendWebsocketMessage(ws, 'lithiumRoom', req.headers.clientid, 'added-member', chatRoomId, addMember)
 
     ws.close();
 
@@ -182,8 +193,8 @@ exports.removeMember = async (req, res) => {
     const message = await MessageService.sendMessage(chatRoomId, req.user.id, customMessage);
 
     const ws = await WebSocketHelper.getOpenWebsocket();
-    await WebSocketHelper.sendWebsocketMessage(ws, 'api-client', req.headers.clientid, 'automated-message', chatRoomId, message);
-    await WebSocketHelper.sendWebsocketMessage(ws, 'api-client', req.headers.clientid, 'removed-member', chatRoomId, removedMember)
+    await WebSocketHelper.sendWebsocketMessage(ws, 'lithiumRoom', req.headers.clientid, 'automated-message', chatRoomId, message);
+    await WebSocketHelper.sendWebsocketMessage(ws, 'lithiumRoom', req.headers.clientid, 'removed-member', chatRoomId, removedMember)
 
     ws.close();
 
@@ -206,7 +217,7 @@ exports.changeName = async (req, res) => {
     const updatedChatRoom = await ChatRoomService.changeName(chatRoom, req.body.name);
 
     const ws = await WebSocketHelper.getOpenWebsocket();
-    await WebSocketHelper.sendWebsocketMessage(ws, 'api-client', req.headers.clientid, 'name-changed', chatRoomId, updatedChatRoom);
+    await WebSocketHelper.sendWebsocketMessage(ws, 'lithiumRoom', req.headers.clientid, 'name-changed', chatRoomId, updatedChatRoom);
 
     ws.close();
 

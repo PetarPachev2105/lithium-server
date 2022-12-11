@@ -22,8 +22,8 @@ router
 
 /* POST METHODS */
 router
-    .route('/create_chat_room')
-    .post(secured(), chatRoomController.createChatRoom);
+    .route('/create_group_lithium_room')
+    .post(secured(), chatRoomController.createGroupLithiumRoom);
 
 router
     .route('/:chatRoomId/send_message')
