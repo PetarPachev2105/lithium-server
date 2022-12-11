@@ -2,7 +2,6 @@ const ChatMember = require('./chatMember.model');
 const IDGenerator = require('../../lib/idGenerator');
 const { LithiumError, LithiumErrorTypes } = require('../../config/LithiumErrors');
 const LithiumHoodService = require("../lithiumHood/lithiumHood.service");
-const LithiumHoodMember = require("../lithiumHoodMember/lithiumHoodMember.model");
 
 exports.addChatMember = async function (userId, chatRoomId) {
     const checkIfExists = await ChatMember.query()
