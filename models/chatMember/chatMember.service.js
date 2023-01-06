@@ -71,7 +71,7 @@ exports.checkIfUsersHavePersonalRoomAlready = async function (user1, user2) {
     if (chatMembersInPersonalRoom.length > 0) {
         for (const chatMembership of chatMembersInPersonalRoom) {
             if (chatMembership.chatRoom) {
-                const otherMembershipInChatRoom = chatMembersInPersonalRoom.filter(obj => obj.chatRoom.id === chatMembership.chatRoom.id && obj.id !== chatMembership.id);
+                const otherMembershipInChatRoom = chatMembersInPersonalRoom.filter(obj => obj.chatRoom && obj.chatRoom.id === chatMembership.chatRoom.id && obj.id !== chatMembership.id);
                 if (otherMembershipInChatRoom) {
                     return true;
                 }

@@ -1,9 +1,7 @@
 const LithiumHoodRequest = require('./lithiumHoodRequest.model');
 const LithiumHoodMember = require('../lithiumHoodMember/lithiumHoodMember.model');
-const WebSocketHelper = require('../../lib/websocketHelper');
 const LithiumHoodService = require('../lithiumHood/lithiumHood.service');
 const IDGenerator = require('../../lib/idGenerator');
-const { LithiumError, LithiumErrorTypes } = require('../../config/LithiumErrors');
 const { convertDateTime } = require('../../lib/convertDateTime');
 const asyncJS = require("async");
 

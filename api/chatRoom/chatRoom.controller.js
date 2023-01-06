@@ -2,6 +2,8 @@ const ChatRoom = require('../../models/chatRoom/chatRoom.model');
 const ChatRoomService = require('../../models/chatRoom/chatRoom.service');
 const ChatMemberService = require('../../models/chatMember/chatMember.service');
 const MessageService = require('../../models/message/message.service');
+const LithiumHoodService = require('../../models/lithiumHood/lithiumHood.service');
+const LithiumHoodMemberService = require('../../models/lithiumHoodMember/lithiumHoodMember.service');
 const UserService = require('../../models/user/user.service');
 const httpStatus = require('http-status');
 const WebSocketHelper = require('../../lib/websocketHelper');
@@ -144,13 +146,16 @@ exports.addMember = async (req, res) => {
 
     const user = await UserService.getUserIdByUsername(req.body.username);
 
-    if (!user) {
-        throw new LithiumError(LithiumErrorTypes.MISSING_INPUTS, 'No such a user');
-    }
+    if (!user) throw new LithiumError(LithiumErrorTypes.BAD_INPUTS, 'No such a user');
 
     const chatRoom = await ChatRoom.query().findById(chatRoomId);
 
-    if (!chatRoom) throw new LithiumError(LithiumErrorTypes.MISSING_INPUTS, 'No such a Lithium room');
+    if (!chatRoom) throw new LithiumError(LithiumErrorTypes.BAD_INPUTS, 'No such a Lithium room');
+
+    const lithiumHood = await LithiumHoodService.getLithiumHood(req.user.id);
+    const isPartOfLithiumHood = await LithiumHoodMemberService.checkIfUserIsInTheLithiumHood(lithiumHood.id, user.id);
+
+    if (!isPartOfLithiumHood) throw new LithiumError(LithiumErrorTypes.BAD_INPUTS, 'User is not part of your lithium hood');
 
     const addMember = await ChatMemberService.addChatMember(user.id, chatRoomId);
     addMember.username = req.body.username;
