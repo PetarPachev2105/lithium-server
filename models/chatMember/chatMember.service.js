@@ -55,6 +55,16 @@ exports.getMembers = async function (chatRoomId) {
     return chatMembers;
 }
 
+exports.checkIfMember = async function (userId, chatRoomId) {
+    const chatMember = await ChatMember.query()
+        .select('id')
+        .where('chatRoom_id', chatRoomId)
+        .andWhere('user_id', userId)
+        .first();
+
+    return !!chatMember;
+}
+
 exports.checkIfUsersHavePersonalRoomAlready = async function (user1, user2) {
     const chatMembersInPersonalRoom = await ChatMember.query()
         .select('id')
