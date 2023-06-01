@@ -114,6 +114,10 @@ exports.sendMessage = async (req, res) => {
 
     if (!chatRoom) throw new LithiumError(LithiumErrorTypes.MISSING_INPUTS, 'No such a Lithium room');
 
+    const isMember = await ChatMemberService.checkIfMember(req.user.id, chatRoomId);
+
+    if (!isMember) throw new LithiumError(LithiumErrorTypes.BAD_INPUTS, 'You are no longer member of this room');
+
     const message = await MessageService.sendMessage(chatRoomId, req.user.id, req.body.content);
 
     message.user = req.user;
@@ -151,6 +155,8 @@ exports.addMember = async (req, res) => {
     const chatRoom = await ChatRoom.query().findById(chatRoomId);
 
     if (!chatRoom) throw new LithiumError(LithiumErrorTypes.BAD_INPUTS, 'No such a Lithium room');
+
+    if (!chatRoom.is_group) throw new LithiumError(LithiumErrorTypes.BAD_INPUTS, 'You can not add members to a personal room');
 
     const lithiumHood = await LithiumHoodService.getLithiumHood(req.user.id);
     const isPartOfLithiumHood = await LithiumHoodMemberService.checkIfUserIsInTheLithiumHood(lithiumHood.id, user.id);
@@ -190,6 +196,8 @@ exports.removeMember = async (req, res) => {
     const chatRoom = await ChatRoom.query().findById(chatRoomId);
 
     if (!chatRoom) throw new LithiumError(LithiumErrorTypes.MISSING_INPUTS, 'No such a Lithium room');
+
+    if (!chatRoom.is_group) throw new LithiumError(LithiumErrorTypes.BAD_INPUTS, 'This is a personal room you cannot remove members');
 
     const removedMember = await ChatMemberService.removeChatMember(user.id, chatRoomId);
     removedMember.username = req.body.username;
